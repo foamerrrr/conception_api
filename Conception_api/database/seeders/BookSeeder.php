@@ -4,43 +4,34 @@ namespace Database\Seeders;
 
 use App\Models\Book;
 use Illuminate\Database\Seeder;
-use RuntimeException;
 
 class BookSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        $path = database_path('seeders/data/books.json');
+        $books = [
+            [
+                'title' => '1984',
+                'author' => 'George Orwell',
+                'summary' => 'Roman dystopique décrivant une société totalitaire contrôlée par Big Brother.',
+                'isbn' => '9780451524935',
+            ],
+            [
+                'title' => 'Dune',
+                'author' => 'Frank Herbert',
+                'summary' => 'Épopée de science-fiction centrée sur la planète Arrakis et les enjeux autour de l’épice.',
+                'isbn' => '9780441013593',
+            ],
+            [
+                'title' => 'Le Seigneur des Anneaux',
+                'author' => 'J.R.R. Tolkien',
+                'summary' => 'Trilogie racontant la quête pour détruire l’Anneau unique et vaincre Sauron.',
+                'isbn' => '9780544003415',
+            ],
+        ];
 
-        if (! is_file($path)) {
-            throw new RuntimeException("Fichier introuvable : {$path}");
-        }
-
-        $json = file_get_contents($path);
-        if ($json === false) {
-            throw new RuntimeException("Impossible de lire : {$path}");
-        }
-
-        $rows = json_decode($json, true, flags: JSON_THROW_ON_ERROR);
-
-        if (! is_array($rows)) {
-            throw new RuntimeException('Le JSON des livres doit être un tableau.');
-        }
-
-        Book::query()->delete();
-
-        foreach ($rows as $row) {
-            Book::query()->updateOrCreate(
-                ['isbn' => $row['isbn']],
-                [
-                    'title' => $row['title'],
-                    'author' => $row['author'],
-                    'summary' => $row['summary'],
-                ],
-            );
+        foreach ($books as $book) {
+            Book::create($book);
         }
     }
 }
