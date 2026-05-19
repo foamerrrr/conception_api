@@ -7,15 +7,24 @@ use App\Http\Requests\StoreBookRequest;
 use App\Http\Requests\UpdateBookRequest;
 use App\Http\Resources\BookResource;
 use App\Models\Book;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
 
 class BookController extends Controller
 {
-    public function index(): AnonymousResourceCollection
+    public function index(Request $request): AnonymousResourceCollection
     {
-        return BookResource::collection(Book::latest()->paginate(2));
+        $validated = $request->validate([
+            'page' => ['sometimes', 'integer', 'min:1'],
+        ]);
+
+        $page = $validated['page'] ?? 1;
+
+        return BookResource::collection(
+            Book::latest()->paginate(perPage: 2, page: $page),
+        );
     }
 
     public function store(StoreBookRequest $request): BookResource
@@ -25,19 +34,28 @@ class BookController extends Controller
         return new BookResource($book);
     }
 
-    public function show(Book $book): BookResource
+    public function show(Request $request): BookResource
     {
-        $cachedBook = Cache::remember(
-            "book.{$book->isbn}",
+        $validated = $request->validate([
+            'isbn' => ['required', 'string', 'size:13', 'exists:books,isbn'],
+        ]);
+
+        $isbn = $validated['isbn'];
+
+        $bookData = Cache::remember(
+            "book.{$isbn}",
             now()->addMinutes(60),
-            fn () => $book,
+            fn () => Book::where('isbn', $isbn)->firstOrFail()->attributesToArray(),
         );
 
-        return new BookResource($cachedBook);
+        $book = (new Book)->newFromBuilder($bookData);
+
+        return new BookResource($book);
     }
 
-    public function update(UpdateBookRequest $request, Book $book): BookResource
+    public function update(UpdateBookRequest $request): BookResource
     {
+        $book = Book::where('isbn', $request->input('isbn'))->firstOrFail();
         $previousIsbn = $book->isbn;
         $book->update($request->validated());
 
@@ -49,8 +67,14 @@ class BookController extends Controller
         return new BookResource($book);
     }
 
-    public function destroy(Book $book): Response
+    public function destroy(Request $request): Response
     {
+        $validated = $request->validate([
+            'isbn' => ['required', 'string', 'size:13', 'exists:books,isbn'],
+        ]);
+
+        $book = Book::where('isbn', $validated['isbn'])->firstOrFail();
+
         Cache::forget("book.{$book->isbn}");
         $book->delete();
 

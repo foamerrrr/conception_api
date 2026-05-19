@@ -19,9 +19,9 @@ class BookResource extends JsonResource
             'summary' => $this->summary,
             'isbn' => $this->isbn,
             '_links' => [
-                'self' => route('books.show', $this->isbn),
-                'update' => route('books.update', $this->isbn),
-                'delete' => route('books.destroy', $this->isbn),
+                'self' => route('books.show'),
+                'update' => route('books.update'),
+                'delete' => route('books.destroy'),
                 'all' => route('books.index'),
             ],
         ];

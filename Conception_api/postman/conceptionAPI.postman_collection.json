@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
     "name": "conceptionAPI",
-    "description": "Le token JSON (login/register) est enregistré dans {{token}} et envoyé en Bearer sur les requêtes protégées. Lancer login ou register avant createBook / putBook / deleteBook / logout.",
+    "description": "Toutes les données (isbn, page, etc.) sont dans le body JSON. Seul {{url}} reste dans l'URL (base API). Le token vient du login (Bearer automatique).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -37,10 +37,6 @@
     {
       "key": "token",
       "value": ""
-    },
-    {
-      "key": "isbn",
-      "value": "9780451524935"
     }
   ],
   "item": [
@@ -67,31 +63,18 @@
             }
           ],
           "request": {
-            "auth": {
-              "type": "noauth"
-            },
+            "auth": { "type": "noauth" },
             "method": "POST",
             "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "options": { "raw": { "language": "json" } }
             },
-            "url": "{{url}}/register",
-            "description": "Enregistre automatiquement json.token dans {{token}}."
+            "url": "{{url}}/register"
           },
           "response": []
         },
@@ -115,31 +98,18 @@
             }
           ],
           "request": {
-            "auth": {
-              "type": "noauth"
-            },
+            "auth": { "type": "noauth" },
             "method": "POST",
             "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "options": { "raw": { "language": "json" } }
             },
-            "url": "{{url}}/login",
-            "description": "Enregistre automatiquement json.token dans {{token}}."
+            "url": "{{url}}/login"
           },
           "response": []
         },
@@ -162,13 +132,9 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
+              { "key": "Accept", "value": "application/json" }
             ],
-            "url": "{{url}}/logout",
-            "description": "Utilise {{token}} en Bearer. Vide {{token}} après succès."
+            "url": "{{url}}/logout"
           },
           "response": []
         }
@@ -180,51 +146,86 @@
         {
           "name": "getPing",
           "request": {
-            "auth": {
-              "type": "noauth"
-            },
+            "auth": { "type": "noauth" },
             "method": "GET",
             "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
+              { "key": "Accept", "value": "application/json" }
             ],
             "url": "{{url}}/ping"
           },
           "response": []
         },
         {
+          "name": "4.1 getBooks (pagination 2)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"page\": 1\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{url}}/books/list",
+            "description": "Page dans le body. Page 2 : {\"page\": 2}"
+          },
+          "response": []
+        },
+        {
           "name": "getBooks",
           "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "GET",
+            "auth": { "type": "noauth" },
+            "method": "POST",
             "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
             ],
-            "url": "{{url}}/books"
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"page\": 1\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{url}}/books/list"
+          },
+          "response": []
+        },
+        {
+          "name": "4.2 getBookByISBN (cache 60 min)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isbn\": \"9780451524935\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{url}}/books/show",
+            "description": "Envoyer 2 fois pour tester le cache."
           },
           "response": []
         },
         {
           "name": "getBookByISBN",
           "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "GET",
+            "auth": { "type": "noauth" },
+            "method": "POST",
             "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
             ],
-            "url": "{{url}}/books/{{isbn}}"
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isbn\": \"9780451524935\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{url}}/books/show"
           },
           "response": []
         },
@@ -233,26 +234,15 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"title\": \"Harry Potter\",\n  \"author\": \"J.K. Rowling\",\n  \"summary\": \"Un jeune sorcier découvre son destin dans une école de magie.\",\n  \"isbn\": \"9780439708180\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "options": { "raw": { "language": "json" } }
             },
-            "url": "{{url}}/books",
-            "description": "Bearer {{token}} — lancer login ou register avant."
+            "url": "{{url}}/books"
           },
           "response": []
         },
@@ -261,26 +251,15 @@
           "request": {
             "method": "PUT",
             "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"1984\",\n  \"author\": \"George Orwell\",\n  \"summary\": \"Roman dystopique décrivant une société totalitaire contrôlée par Big Brother.\",\n  \"isbn\": \"{{isbn}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "raw": "{\n  \"isbn\": \"9780451524935\",\n  \"title\": \"1984\",\n  \"author\": \"George Orwell\",\n  \"summary\": \"Roman dystopique décrivant une société totalitaire contrôlée par Big Brother.\"\n}",
+              "options": { "raw": { "language": "json" } }
             },
-            "url": "{{url}}/books/{{isbn}}",
-            "description": "Bearer {{token}} — lancer login ou register avant."
+            "url": "{{url}}/books"
           },
           "response": []
         },
@@ -289,13 +268,15 @@
           "request": {
             "method": "DELETE",
             "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
             ],
-            "url": "{{url}}/books/{{isbn}}",
-            "description": "Bearer {{token}} — lancer login ou register avant."
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isbn\": \"9780439708180\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{url}}/books"
           },
           "response": []
         }

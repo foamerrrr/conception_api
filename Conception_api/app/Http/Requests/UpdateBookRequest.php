@@ -19,20 +19,19 @@ class UpdateBookRequest extends FormRequest
      */
     public function rules(): array
     {
-        /** @var Book $book */
-        $book = $this->route('book');
+        $book = Book::where('isbn', $this->input('isbn'))->first();
 
         return [
-            'title' => ['sometimes', 'required', 'string', 'min:3', 'max:255'],
-            'author' => ['sometimes', 'required', 'string', 'min:3', 'max:100'],
-            'summary' => ['sometimes', 'required', 'string', 'min:10', 'max:500'],
             'isbn' => [
-                'sometimes',
                 'required',
                 'string',
                 'size:13',
+                'exists:books,isbn',
                 Rule::unique('books', 'isbn')->ignore($book),
             ],
+            'title' => ['sometimes', 'required', 'string', 'min:3', 'max:255'],
+            'author' => ['sometimes', 'required', 'string', 'min:3', 'max:100'],
+            'summary' => ['sometimes', 'required', 'string', 'min:10', 'max:500'],
         ];
     }
 }
