@@ -9,8 +9,6 @@ use Illuminate\Support\Str;
 class BookResource extends JsonResource
 {
     /**
-     * Transform the resource into an array.
-     *
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array
@@ -20,6 +18,12 @@ class BookResource extends JsonResource
             'author' => Str::upper($this->author),
             'summary' => $this->summary,
             'isbn' => $this->isbn,
+            '_links' => [
+                'self' => route('books.show', $this->isbn),
+                'update' => route('books.update', $this->isbn),
+                'delete' => route('books.destroy', $this->isbn),
+                'all' => route('books.index'),
+            ],
         ];
     }
 }

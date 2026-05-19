@@ -217,27 +217,14 @@
             "auth": {
               "type": "noauth"
             },
-            "method": "POST",
+            "method": "GET",
             "header": [
               {
                 "key": "Accept",
                 "value": "application/json"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
               }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"isbn\": \"{{isbn}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{url}}/books/show"
+            "url": "{{url}}/books/{{isbn}}"
           },
           "response": []
         },
@@ -292,7 +279,7 @@
                 }
               }
             },
-            "url": "{{url}}/books",
+            "url": "{{url}}/books/{{isbn}}",
             "description": "Bearer {{token}} — lancer login ou register avant."
           },
           "response": []
@@ -305,22 +292,9 @@
               {
                 "key": "Accept",
                 "value": "application/json"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
               }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"isbn\": \"{{isbn}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{url}}/books",
+            "url": "{{url}}/books/{{isbn}}",
             "description": "Bearer {{token}} — lancer login ou register avant."
           },
           "response": []
