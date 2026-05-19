@@ -1,24 +1,31 @@
 <?php
 
-use App\Http\Controllers\Api\BookController;
-use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\API\BookController;
+use App\Http\Controllers\API\UserController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/ping', function () {
-    return response()->json(['message' => 'pong']);
+    return response()->json([
+        'message' => 'pong',
+    ]);
 });
 
 Route::post('/register', [UserController::class, 'register']);
-Route::post('/login', [UserController::class, 'login']);
+Route::post('/login', [UserController::class, 'login'])->middleware('throttle:10,1');
 
-Route::get('books', [BookController::class, 'index']);
-Route::post('books/show', [BookController::class, 'show']);
+Route::get('/books', [BookController::class, 'index']);
+Route::get('/books/{book}', [BookController::class, 'show']);
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
+
     Route::post('/logout', [UserController::class, 'logout']);
 
-    Route::post('books', [BookController::class, 'store']);
-    Route::put('books', [BookController::class, 'update']);
-    Route::patch('books', [BookController::class, 'update']);
-    Route::delete('books', [BookController::class, 'destroy']);
+    Route::post('/books', [BookController::class, 'store']);
+    Route::put('/books/{book}', [BookController::class, 'update']);
+    Route::patch('/books/{book}', [BookController::class, 'update']);
+    Route::delete('/books/{book}', [BookController::class, 'destroy']);
 });

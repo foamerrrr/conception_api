@@ -2,9 +2,33 @@
   "info": {
     "_postman_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
     "name": "conceptionAPI",
-    "description": "Collection API Conception — importer aussi le fichier Conception_API.postman_environment.json puis sélectionner l'environnement « Conception API - Local » en haut à droite.",
+    "description": "Le token JSON (login/register) est enregistré dans {{token}} et envoyé en Bearer sur les requêtes protégées. Lancer login ou register avant createBook / putBook / deleteBook / logout.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const token = pm.environment.get('token') || pm.collectionVariables.get('token');",
+          "if (token) {",
+          "    pm.request.headers.upsert({ key: 'Authorization', value: 'Bearer ' + token });",
+          "}"
+        ]
+      }
+    }
+  ],
   "variable": [
     {
       "key": "url",
@@ -25,7 +49,27 @@
       "item": [
         {
           "name": "register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if ([200, 201].includes(pm.response.code)) {",
+                  "    const json = pm.response.json();",
+                  "    if (json.token) {",
+                  "        pm.environment.set('token', json.token);",
+                  "        pm.collectionVariables.set('token', json.token);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
             "header": [
               {
@@ -47,7 +91,7 @@
               }
             },
             "url": "{{url}}/register",
-            "description": "Inscription — ne nécessite pas de token."
+            "description": "Enregistre automatiquement json.token dans {{token}}."
           },
           "response": []
         },
@@ -57,20 +101,23 @@
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
-                  "if (pm.response.code === 200) {",
+                  "if ([200, 201].includes(pm.response.code)) {",
                   "    const json = pm.response.json();",
                   "    if (json.token) {",
                   "        pm.environment.set('token', json.token);",
                   "        pm.collectionVariables.set('token', json.token);",
                   "    }",
                   "}"
-                ],
-                "type": "text/javascript"
+                ]
               }
             }
           ],
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
             "header": [
               {
@@ -92,23 +139,27 @@
               }
             },
             "url": "{{url}}/login",
-            "description": "Connexion — enregistre automatiquement le token dans les variables."
+            "description": "Enregistre automatiquement json.token dans {{token}}."
           },
           "response": []
         },
         {
           "name": "logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    pm.environment.set('token', '');",
+                  "    pm.collectionVariables.set('token', '');",
+                  "}"
+                ]
+              }
+            }
+          ],
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "POST",
             "header": [
               {
@@ -117,7 +168,7 @@
               }
             ],
             "url": "{{url}}/logout",
-            "description": "Déconnexion — nécessite le Bearer token (lancer login avant)."
+            "description": "Utilise {{token}} en Bearer. Vide {{token}} après succès."
           },
           "response": []
         }
@@ -129,6 +180,9 @@
         {
           "name": "getPing",
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "header": [
               {
@@ -136,14 +190,16 @@
                 "value": "application/json"
               }
             ],
-            "url": "{{url}}/ping",
-            "description": "Vérifie que l'API répond."
+            "url": "{{url}}/ping"
           },
           "response": []
         },
         {
           "name": "getBooks",
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "header": [
               {
@@ -151,14 +207,16 @@
                 "value": "application/json"
               }
             ],
-            "url": "{{url}}/books",
-            "description": "Liste tous les livres (public)."
+            "url": "{{url}}/books"
           },
           "response": []
         },
         {
           "name": "getBookByISBN",
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
             "header": [
               {
@@ -179,24 +237,13 @@
                 }
               }
             },
-            "url": "{{url}}/books/show",
-            "description": "Affiche un livre par ISBN — méthode POST, ISBN dans le body (pas dans l'URL)."
+            "url": "{{url}}/books/show"
           },
           "response": []
         },
         {
           "name": "createBook",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "POST",
             "header": [
               {
@@ -218,23 +265,13 @@
               }
             },
             "url": "{{url}}/books",
-            "description": "Crée un livre — token requis (login avant)."
+            "description": "Bearer {{token}} — lancer login ou register avant."
           },
           "response": []
         },
         {
           "name": "putBook",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "PUT",
             "header": [
               {
@@ -256,23 +293,13 @@
               }
             },
             "url": "{{url}}/books",
-            "description": "Modifie un livre — tous les champs dans le body, token requis."
+            "description": "Bearer {{token}} — lancer login ou register avant."
           },
           "response": []
         },
         {
           "name": "deleteBook",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "DELETE",
             "header": [
               {
@@ -294,7 +321,7 @@
               }
             },
             "url": "{{url}}/books",
-            "description": "Supprime un livre — ISBN dans le body, token requis."
+            "description": "Bearer {{token}} — lancer login ou register avant."
           },
           "response": []
         }
