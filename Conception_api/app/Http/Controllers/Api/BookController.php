@@ -75,11 +75,13 @@ class BookController extends Controller
             ),
         ],
     )]
-    public function store(StoreBookRequest $request): BookResource
+    public function store(StoreBookRequest $request): JsonResponse
     {
         $book = Book::create($request->validated());
 
-        return new BookResource($book);
+        return (new BookResource($book))
+            ->response()
+            ->setStatusCode(201);
     }
 
     #[OA\Get(
