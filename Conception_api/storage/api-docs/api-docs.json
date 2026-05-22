@@ -1,0 +1,650 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Conception API",
+        "description": "API REST Laravel — authentification Sanctum et gestion des livres (pagination, cache, HATEOAS).",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://127.0.0.1:8000/api/v1",
+            "description": "Serveur local (php artisan serve)"
+        }
+    ],
+    "paths": {
+        "/books": {
+            "get": {
+                "tags": [
+                    "Books"
+                ],
+                "summary": "Liste des livres",
+                "description": "Retourne la liste paginée (2 livres par page), triée par date de création décroissante.",
+                "operationId": "booksIndex",
+                "responses": {
+                    "200": {
+                        "description": "Liste paginée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Book"
+                                            }
+                                        },
+                                        "links": {
+                                            "type": "object"
+                                        },
+                                        "meta": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Books"
+                ],
+                "summary": "Créer un livre",
+                "description": "Crée un nouveau livre. Route protégée par Sanctum.",
+                "operationId": "booksStore",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BookInput"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Livre créé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Book"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "422": {
+                        "description": "Erreur de validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/books/{book}": {
+            "get": {
+                "tags": [
+                    "Books"
+                ],
+                "summary": "Détail d'un livre",
+                "description": "Affiche un livre par son identifiant. Réponse mise en cache 60 minutes (clé book.{id}).",
+                "operationId": "booksShow",
+                "parameters": [
+                    {
+                        "name": "book",
+                        "in": "path",
+                        "description": "Identifiant du livre",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail du livre (cache 60 min)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Book"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Livre introuvable"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Books"
+                ],
+                "summary": "Modifier un livre (PUT)",
+                "description": "Met à jour un livre. Champs optionnels avec PATCH (sometimes). Invalide le cache.",
+                "operationId": "booksUpdate",
+                "parameters": [
+                    {
+                        "name": "book",
+                        "in": "path",
+                        "description": "Identifiant du livre",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BookUpdateInput"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Livre mis à jour",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Book"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "404": {
+                        "description": "Livre introuvable"
+                    },
+                    "422": {
+                        "description": "Erreur de validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Books"
+                ],
+                "summary": "Supprimer un livre",
+                "description": "Supprime un livre et invalide son cache. Route protégée.",
+                "operationId": "booksDestroy",
+                "parameters": [
+                    {
+                        "name": "book",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Suppression réussie (corps vide)"
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "404": {
+                        "description": "Livre introuvable"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Books"
+                ],
+                "summary": "Modifier un livre (PATCH)",
+                "description": "Mise à jour partielle — seuls les champs envoyés sont modifiés (sometimes).",
+                "operationId": "booksPatch",
+                "parameters": [
+                    {
+                        "name": "book",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BookUpdateInput"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Livre mis à jour"
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "404": {
+                        "description": "Livre introuvable"
+                    },
+                    "422": {
+                        "description": "Erreur de validation"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/register": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Inscription",
+                "description": "Crée un utilisateur et renvoie un token Sanctum. Mot de passe haché automatiquement.",
+                "operationId": "authRegister",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Test User",
+                                        "maxLength": 255
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "test@example.com",
+                                        "maxLength": 255
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "example": "password123",
+                                        "minLength": 8
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Inscription réussie",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AuthResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Erreur de validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/login": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Connexion",
+                "description": "Authentifie un utilisateur et renvoie un token Sanctum. Limité à 10 requêtes par minute.",
+                "operationId": "authLogin",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "test@example.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "example": "password123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Connexion réussie",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AuthResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Identifiants invalides ou validation échouée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Trop de tentatives (throttle 10/min)"
+                    }
+                }
+            }
+        },
+        "/logout": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Déconnexion",
+                "description": "Supprime le token Sanctum courant. Route protégée.",
+                "operationId": "authLogout",
+                "responses": {
+                    "200": {
+                        "description": "Déconnexion réussie",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MessageResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié — token manquant ou invalide"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "User": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Test User"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "test@example.com"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "AuthResponse": {
+                "properties": {
+                    "user": {
+                        "$ref": "#/components/schemas/User"
+                    },
+                    "token": {
+                        "type": "string",
+                        "example": "1|abcdefghijklmnopqrstuvwxyz"
+                    }
+                },
+                "type": "object"
+            },
+            "BookLinks": {
+                "properties": {
+                    "self": {
+                        "type": "string",
+                        "example": "http://127.0.0.1:8000/api/v1/books/1"
+                    },
+                    "update": {
+                        "type": "string",
+                        "example": "http://127.0.0.1:8000/api/v1/books/1"
+                    },
+                    "delete": {
+                        "type": "string",
+                        "example": "http://127.0.0.1:8000/api/v1/books/1"
+                    },
+                    "all": {
+                        "type": "string",
+                        "example": "http://127.0.0.1:8000/api/v1/books"
+                    }
+                },
+                "type": "object"
+            },
+            "Book": {
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "example": "1984"
+                    },
+                    "author": {
+                        "type": "string",
+                        "example": "GEORGE ORWELL"
+                    },
+                    "summary": {
+                        "type": "string",
+                        "example": "Roman dystopique décrivant une société totalitaire contrôlée par Big Brother."
+                    },
+                    "isbn": {
+                        "type": "string",
+                        "example": "9780451524935"
+                    },
+                    "_links": {
+                        "$ref": "#/components/schemas/BookLinks"
+                    }
+                },
+                "type": "object"
+            },
+            "BookInput": {
+                "required": [
+                    "title",
+                    "author",
+                    "summary",
+                    "isbn"
+                ],
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "example": "1984",
+                        "maxLength": 255,
+                        "minLength": 3
+                    },
+                    "author": {
+                        "type": "string",
+                        "example": "George Orwell",
+                        "maxLength": 100,
+                        "minLength": 3
+                    },
+                    "summary": {
+                        "type": "string",
+                        "example": "Roman dystopique décrivant une société totalitaire contrôlée par Big Brother.",
+                        "maxLength": 500,
+                        "minLength": 10
+                    },
+                    "isbn": {
+                        "type": "string",
+                        "example": "9780451524935",
+                        "maxLength": 13,
+                        "minLength": 13
+                    }
+                },
+                "type": "object"
+            },
+            "BookUpdateInput": {
+                "required": [
+                    "isbn"
+                ],
+                "properties": {
+                    "isbn": {
+                        "type": "string",
+                        "example": "9780451524935",
+                        "maxLength": 13,
+                        "minLength": 13
+                    },
+                    "title": {
+                        "type": "string",
+                        "example": "1984",
+                        "maxLength": 255,
+                        "minLength": 3
+                    },
+                    "author": {
+                        "type": "string",
+                        "example": "George Orwell",
+                        "maxLength": 100,
+                        "minLength": 3
+                    },
+                    "summary": {
+                        "type": "string",
+                        "example": "Roman dystopique décrivant une société totalitaire contrôlée par Big Brother.",
+                        "maxLength": 500,
+                        "minLength": 10
+                    }
+                },
+                "type": "object"
+            },
+            "ValidationError": {
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "example": "The title field is required."
+                    },
+                    "errors": {
+                        "type": "object",
+                        "example": {
+                            "title": [
+                                "The title field is required."
+                            ]
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "MessageResponse": {
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "example": "Logged out successfully"
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "securitySchemes": {
+            "sanctum": {
+                "type": "http",
+                "description": "Token obtenu via POST /register ou POST /login. Format : Bearer {token}",
+                "bearerFormat": "Sanctum",
+                "scheme": "bearer"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Books",
+            "description": "Books"
+        },
+        {
+            "name": "Auth",
+            "description": "Auth"
+        }
+    ]
+}
